@@ -1,0 +1,18 @@
+---
+- name: set timezon Asia/Tokyo
+  shell: timedatectl set-timezone Asia/Tokyo
+
+- name: install httpd
+  yum:
+    name: httpd
+    state: latest
+
+- name: enable httpd
+  systemd:
+    name: httpd
+    enabled: yes
+
+- name: restart httpd
+  systemd:
+    name: httpd
+    state: restarted

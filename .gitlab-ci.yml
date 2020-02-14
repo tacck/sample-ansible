@@ -1,0 +1,45 @@
+stages:
+  - deploy
+  - testing
+
+.deploy_job: &deploy_job
+  stage: deploy
+  image: cytopia/ansible:2.9-tools
+  script:
+    - ansible-playbook -i hosts/${APP_ENV}/inventory main.yml
+
+deploy testing:
+  <<: *deploy_job
+  variables:
+    APP_ENV: testing
+  before_script:
+    - chmod 755 .
+    - cat $SSH_KEY_PEM > hosts/testing/web_testing.pem
+    - chmod 600 hosts/testing/web_testing.pem
+
+deploy production:
+  <<: *deploy_job
+  variables:
+    APP_ENV: production
+  before_script:
+    - chmod 755 .
+    - cat $SSH_KEY_PEM_PROD > hosts/production/web_production.pem
+    - chmod 600 hosts/production/web_production.pem
+  when: manual
+
+.testing_job: &testing_job
+  stage: testing
+  image: node:12
+  script:
+    - cd tests && yarn install && yarn test
+
+testing testing:
+  <<: *testing_job
+  variables:
+    APP_ENV: testing
+
+testing production:
+  <<: *testing_job
+  variables:
+    APP_ENV: production
+  when: manual
